@@ -301,18 +301,43 @@ async function callGroq(prompt) {
   return data.choices[0].message.content;
 }
 
+function safeParseArray(raw) {
+  let clean = raw.replace(/```json|```/g,'').trim();
+  const start = clean.indexOf('[');
+  const end = clean.lastIndexOf(']');
+  clean = clean.substring(start, end+1);
+  // Fix common issues: remove trailing commas, fix smart quotes
+  clean = clean
+    .replace(/,\s*]/g, ']')
+    .replace(/,\s*}/g, '}')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"');
+  return JSON.parse(clean);
+}
+
+function safeParseObject(raw) {
+  let clean = raw.replace(/```json|```/g,'').trim();
+  const start = clean.indexOf('{');
+  const end = clean.lastIndexOf('}');
+  clean = clean.substring(start, end+1);
+  clean = clean
+    .replace(/,\s*}/g, '}')
+    .replace(/,\s*]/g, ']')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"');
+  return JSON.parse(clean);
+}
+
 async function generateQuestions() {
   const typeLabel = config.type==='mixed'?'both HR/behavioral and technical':config.type==='hr'?'HR/behavioral only':'technical only';
   const stackNote = config.stack ? ` Tech stack: ${config.stack}.` : '';
   const raw = await callGroq(
     `Generate exactly ${config.numQ} interview questions for a ${config.level} ${config.role}.${stackNote} Type: ${typeLabel}.
-Return ONLY a JSON array, no markdown, no backticks, no explanation:
-[{"q":"question text","type":"Behavioral" or "Technical" or "HR","hint":"short hint on what a great answer covers"}]`
+Return ONLY a JSON array, no markdown, no backticks, no explanation. Use only double quotes. Keep hints short (under 20 words):
+[{"q":"question text","type":"Behavioral","hint":"short hint"}]
+Types must be exactly one of: Behavioral, Technical, HR`
   );
-  const clean = raw.replace(/```json|```/g,'').trim();
-  const start = clean.indexOf('[');
-  const end = clean.lastIndexOf(']');
-  return JSON.parse(clean.substring(start, end+1));
+  return safeParseArray(raw);
 }
 
 async function getFeedback(question, qType, answer) {
@@ -322,13 +347,10 @@ Question: "${question}"
 Type: ${qType} | Level: ${config.level} | Time: ${elapsed}s
 Answer: "${answer}"
 
-Respond ONLY with a valid JSON object, no markdown, no explanation:
-{"score":<1-10>,"clarity":<1-10>,"relevance":<1-10>,"strengths":["point 1","point 2"],"improvements":["point 1","point 2"],"sampleAnswer":"3-4 sentence model answer","verdict":"one short encouraging sentence"}`
+Respond ONLY with a valid JSON object. Use only double quotes. No markdown, no explanation, no trailing commas:
+{"score":7,"clarity":7,"relevance":7,"strengths":["strength 1","strength 2"],"improvements":["improvement 1","improvement 2"],"sampleAnswer":"Model answer here in 3-4 sentences.","verdict":"One encouraging sentence."}`
   );
-  const clean = raw.replace(/```json|```/g,'').trim();
-  const start = clean.indexOf('{');
-  const end = clean.lastIndexOf('}');
-  return JSON.parse(clean.substring(start, end+1));
+  return safeParseObject(raw);
 }
 
 function startTimer(){

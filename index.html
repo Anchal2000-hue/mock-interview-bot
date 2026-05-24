@@ -1,13 +1,476 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mock-interview-bot</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mock Interview Bot — AI Interview Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;--bg2:#111118;--bg3:#1a1a24;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);
+  --text:#f0f0f8;--text2:rgba(240,240,248,0.55);--text3:rgba(240,240,248,0.3);
+  --accent:#7c6dfa;--accent2:#a594fb;--green:#3ddc97;--red:#ff6b6b;--amber:#ffc55a;
+  --mono:'DM Mono',monospace;--display:'Syne',sans-serif;--r:10px;--rl:16px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;line-height:1.6}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+::selection{background:var(--accent);color:#fff}
+nav{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(10,10,15,0.92);backdrop-filter:blur(12px);z-index:100}
+.logo{font-family:var(--display);font-size:16px;font-weight:700;letter-spacing:-0.02em}
+.logo span{color:var(--accent)}
+#exitBtn{display:none;background:none;border:1px solid var(--border);color:var(--text2);font-family:var(--mono);font-size:12px;padding:6px 12px;border-radius:6px;cursor:pointer;transition:border-color .15s,color .15s}
+#exitBtn:hover{border-color:var(--red);color:var(--red)}
+#errorBanner{display:none;align-items:center;justify-content:space-between;gap:1rem;background:rgba(255,107,107,0.1);border-bottom:1px solid rgba(255,107,107,0.2);color:var(--red);font-size:13px;padding:10px 1.5rem}
+#errorBanner button{background:none;border:none;color:var(--red);cursor:pointer;font-size:16px}
+.screen{display:none;max-width:620px;margin:0 auto;padding:2.5rem 1.5rem}
+.screen.active{display:block}
+.hero{margin-bottom:2.5rem}
+.tag{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--accent2);margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.tag::before{content:'';display:inline-block;width:20px;height:1px;background:var(--accent2)}
+h1{font-family:var(--display);font-size:clamp(2.2rem,7vw,3.5rem);font-weight:800;line-height:1.05;letter-spacing:-0.02em;margin-bottom:.75rem}
+.sub{font-size:15px;color:var(--text2)}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:1.5rem;margin-bottom:1.5rem}
+.card-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:1.25rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;color:var(--text2)}
+.field select,.field input,.field textarea{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:13px;padding:9px 12px;outline:none;transition:border-color .15s;appearance:none;width:100%}
+.field select:focus,.field input:focus,.field textarea:focus{border-color:var(--accent)}
+.field input::placeholder,.field textarea::placeholder{color:var(--text3)}
+.field textarea{resize:vertical;line-height:1.7}
+.btn-primary{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:var(--display);font-size:15px;font-weight:600;cursor:pointer;margin-top:1rem;transition:opacity .2s,transform .15s;letter-spacing:.01em}
+.btn-primary:hover{opacity:.88;transform:translateY(-1px)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-secondary{background:none;border:1px solid var(--border);color:var(--text2);font-family:var(--mono);font-size:13px;padding:10px 18px;border-radius:var(--r);cursor:pointer;transition:border-color .15s,color .15s}
+.btn-secondary:hover{border-color:var(--border2);color:var(--text)}
+.btn-secondary:disabled{opacity:.4;cursor:not-allowed}
+.features{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap}
+.feature{font-size:12px;color:var(--text3);display:flex;align-items:center;gap:5px}
+.api-note{background:rgba(61,220,151,0.07);border:1px solid rgba(61,220,151,0.2);border-radius:var(--r);padding:12px 14px;font-size:12.5px;color:var(--text2);margin-bottom:1rem;line-height:1.6}
+.api-note a{color:var(--green)}
+.top-bar{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem}
+.progress-wrap{flex:1;display:flex;align-items:center;gap:10px}
+.progress-bar{flex:1;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease}
+.progress-label{font-size:12px;color:var(--text3);white-space:nowrap}
+.timer-box{font-size:13px;color:var(--text2);background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 10px;letter-spacing:.05em}
+.card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.type-badge{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:6px}
+.badge-behavioral{background:rgba(124,109,250,.15);color:var(--accent2)}
+.badge-technical{background:rgba(61,220,151,.12);color:var(--green)}
+.badge-hr{background:rgba(255,197,90,.12);color:var(--amber)}
+.q-num{font-size:12px;color:var(--text3)}
+.question-text{font-family:var(--display);font-size:17px;font-weight:500;line-height:1.55;margin-bottom:1.25rem}
+.hint-wrap{margin-bottom:1.25rem}
+.hint-toggle{background:none;border:none;color:var(--accent2);font-family:var(--mono);font-size:12px;cursor:pointer;padding:0;margin-bottom:6px;display:block}
+.hint-box{font-size:13px;color:var(--text2);background:rgba(124,109,250,.07);border-left:2px solid var(--accent);border-radius:0 6px 6px 0;padding:10px 14px;line-height:1.6;display:none}
+.answer-label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.char-count{text-align:right;font-size:11px;color:var(--text3);margin-top:5px}
+.action-row{display:flex;gap:10px;margin-top:1.25rem;align-items:center}
+.action-row .btn-primary{width:auto;flex:1;margin-top:0;padding:11px;font-size:14px}
+.q-echo{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.25rem;margin-bottom:1.25rem}
+.q-echo-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:6px}
+.q-echo p{font-family:var(--display);font-size:14px;color:var(--text2);line-height:1.5}
+.score-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem}
+.score-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem 1rem;text-align:center}
+.score-val{font-family:var(--display);font-size:2rem;font-weight:700;line-height:1}
+.score-max{font-size:12px;color:var(--text3);margin-top:1px}
+.score-lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-top:6px}
+.verdict{background:rgba(124,109,250,.08);border:1px solid rgba(124,109,250,.2);border-radius:var(--r);padding:12px 16px;font-size:14px;color:var(--accent2);margin-bottom:1.25rem;line-height:1.5}
+.fb-sections{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.25rem}
+.fb-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1rem}
+.fb-head{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+.fb-head.green{color:var(--green)}.fb-head.amber{color:var(--amber)}
+.fb-list{list-style:none;display:flex;flex-direction:column;gap:7px}
+.fb-list li{font-size:13px;color:var(--text2);line-height:1.5;padding-left:12px;position:relative}
+.fb-list li::before{content:'—';position:absolute;left:0;color:var(--text3)}
+.sample-wrap{background:var(--bg2);border:1px solid var(--border);border-left:2px solid var(--green);border-radius:0 var(--r) var(--r) 0;padding:1rem 1.25rem;margin-bottom:1.25rem}
+.sample-head{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--green);margin-bottom:8px}
+.sample-text{font-size:13.5px;color:var(--text2);line-height:1.7}
+.fb-actions{display:flex;gap:10px}
+.fb-actions .btn-primary{width:auto;flex:1;margin-top:0;padding:11px;font-size:14px}
+.results-hero{text-align:center;margin-bottom:2.5rem}
+.big-score{font-family:var(--display);font-size:6rem;font-weight:800;line-height:1;margin-bottom:4px}
+.big-label{font-size:14px;color:var(--text2);margin-bottom:1rem}
+.grade-badge{display:inline-block;border:1px solid;border-radius:20px;padding:4px 18px;font-size:13px;font-weight:500;letter-spacing:.05em;margin-bottom:1rem}
+.results-sub{font-size:13px;color:var(--text3)}
+.breakdown{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:1.5rem}
+.breakdown-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.breakdown-row:last-child{border-bottom:none}
+.row-q{font-size:11px;font-weight:600;color:var(--text3);min-width:24px}
+.row-text{flex:1;font-size:13px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row-score{font-family:var(--display);font-size:14px;font-weight:600;color:var(--accent2)}
+.row-skipped{font-size:11px;color:var(--text3);font-style:italic}
+.dots{display:inline-flex;align-items:center;gap:4px}
+.dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.7);animation:pulse 1.2s infinite;display:inline-block}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeUp .3s ease}
+@media(max-width:500px){.grid2{grid-template-columns:1fr}.fb-sections{grid-template-columns:1fr}.features{flex-direction:column;align-items:center}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">interview<span>.bot</span></div>
+  <button id="exitBtn" onclick="goSetup()">✕ Exit</button>
+</nav>
+<div id="errorBanner">
+  <span id="errorMsg">Something went wrong.</span>
+  <button onclick="hideError()">✕</button>
+</div>
+
+<!-- SETUP -->
+<div id="setupScreen" class="screen active">
+  <div class="hero">
+    <div class="tag">AI Interview Coach</div>
+    <h1>Mock Interview<br>Bot</h1>
+    <p class="sub">Real questions. Instant feedback. Land that MNC offer.</p>
+  </div>
+  <div class="api-note">
+    🔑 Powered by <strong>Groq (free)</strong> — get your key at
+    <a href="https://console.groq.com" target="_blank">console.groq.com</a>
+    → API Keys → Create API Key (starts with <code>gsk_</code>)
+  </div>
+  <div class="card">
+    <div class="card-label">Configure your session</div>
+    <div class="field" style="margin-bottom:12px">
+      <label>Your Groq API Key</label>
+      <input type="password" id="apiKey" placeholder="gsk_..." />
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label>Target role</label>
+        <select id="role">
+          <option>Software Engineer</option>
+          <option>Frontend Developer</option>
+          <option>Backend Developer</option>
+          <option>Full Stack Developer</option>
+          <option>Data Scientist</option>
+          <option>DevOps Engineer</option>
+          <option>Product Manager</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Interview type</label>
+        <select id="itype">
+          <option value="mixed">Mixed (HR + Technical)</option>
+          <option value="hr">HR / Behavioral only</option>
+          <option value="technical">Technical only</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Experience level</label>
+        <select id="level">
+          <option value="fresher">Fresher / Entry level</option>
+          <option value="junior">Junior (1–2 yrs)</option>
+          <option value="mid">Mid level (3–5 yrs)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Number of questions</label>
+        <select id="numQ">
+          <option value="3">3 questions</option>
+          <option value="5" selected>5 questions</option>
+          <option value="8">8 questions</option>
+          <option value="10">10 questions</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Your tech stack <span style="color:var(--text3)">(optional)</span></label>
+      <input type="text" id="stack" placeholder="e.g. React, Node.js, MongoDB, Python..." />
+    </div>
+    <button class="btn-primary" id="startBtn" onclick="startInterview()">▶ &nbsp;Start interview</button>
+  </div>
+  <div class="features">
+    <div class="feature">⚡ Groq — super fast AI</div>
+    <div class="feature">📊 Scored feedback</div>
+    <div class="feature">🎯 Role-specific</div>
+    <div class="feature">💡 Sample answers</div>
+  </div>
+</div>
+
+<!-- QUESTION -->
+<div id="questionScreen" class="screen">
+  <div class="top-bar">
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <span class="progress-label" id="progressLabel">1 / 5</span>
+    </div>
+    <div class="timer-box" id="timerBox">0:00</div>
+  </div>
+  <div class="card fade-in">
+    <div class="card-top">
+      <span class="type-badge" id="typeBadge">Behavioral</span>
+      <span class="q-num" id="qNum">Question 1</span>
+    </div>
+    <p class="question-text" id="questionText">Loading...</p>
+    <div class="hint-wrap">
+      <button class="hint-toggle" id="hintToggle" onclick="toggleHint()">▸ Show hint</button>
+      <div class="hint-box" id="hintBox"></div>
+    </div>
+    <div class="field">
+      <label class="answer-label">Your answer</label>
+      <textarea id="answerBox" rows="6" placeholder="Type your answer here. Use STAR method for behavioral questions: Situation → Task → Action → Result"></textarea>
+      <div class="char-count" id="charCount">0 chars</div>
+    </div>
+    <div class="action-row">
+      <button class="btn-secondary" id="skipBtn" onclick="skipQuestion()">Skip →</button>
+      <button class="btn-primary" id="submitBtn" onclick="submitAnswer()">Get feedback ↗</button>
+    </div>
+  </div>
+</div>
+
+<!-- FEEDBACK -->
+<div id="feedbackScreen" class="screen">
+  <div class="q-echo">
+    <span class="q-echo-label">Question</span>
+    <p id="fbQuestion"></p>
+  </div>
+  <div class="score-row">
+    <div class="score-card"><div class="score-val" id="scoreOverall">—</div><div class="score-max">/10</div><div class="score-lbl">Overall</div></div>
+    <div class="score-card"><div class="score-val" id="scoreClarity">—</div><div class="score-max">/10</div><div class="score-lbl">Clarity</div></div>
+    <div class="score-card"><div class="score-val" id="scoreRelevance">—</div><div class="score-max">/10</div><div class="score-lbl">Relevance</div></div>
+  </div>
+  <div class="verdict" id="fbVerdict"></div>
+  <div class="fb-sections">
+    <div class="fb-section"><div class="fb-head green">✓ Strengths</div><ul class="fb-list" id="fbStrengths"></ul></div>
+    <div class="fb-section"><div class="fb-head amber">↑ Improve</div><ul class="fb-list" id="fbImprovements"></ul></div>
+  </div>
+  <div class="sample-wrap">
+    <div class="sample-head">Sample strong answer</div>
+    <p class="sample-text" id="fbSample"></p>
+  </div>
+  <div class="fb-actions">
+    <button class="btn-secondary" onclick="retryQuestion()">↺ Retry</button>
+    <button class="btn-primary" id="nextBtn" onclick="nextQuestion()">Next question →</button>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="resultsScreen" class="screen">
+  <div class="results-hero">
+    <div class="big-score" id="avgScore">0</div>
+    <div class="big-label">/10 average score</div>
+    <div class="grade-badge" id="gradeBadge">—</div>
+    <p class="results-sub" id="resultsSub"></p>
+  </div>
+  <div class="breakdown" id="breakdown"></div>
+  <button class="btn-primary" onclick="goSetup()">↺ New interview</button>
+</div>
+
+<script>
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
+
+let API_KEY='', questions=[], currentIdx=0, answers=[], config={};
+let timerInterval=null, elapsed=0, hintVisible=false;
+
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function showError(msg){document.getElementById('errorMsg').textContent=msg;document.getElementById('errorBanner').style.display='flex'}
+function hideError(){document.getElementById('errorBanner').style.display='none'}
+function fmt(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function scoreColor(v){return v>=8?'var(--green)':v>=6?'var(--accent2)':'var(--amber)'}
+
+async function callGroq(prompt) {
+  const res = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + API_KEY
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      max_tokens: 1000,
+      temperature: 0.7,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err?.error?.message || 'API error ' + res.status);
+  }
+  const data = await res.json();
+  return data.choices[0].message.content;
+}
+
+async function generateQuestions() {
+  const typeLabel = config.type==='mixed'?'both HR/behavioral and technical':config.type==='hr'?'HR/behavioral only':'technical only';
+  const stackNote = config.stack ? ` Tech stack: ${config.stack}.` : '';
+  const raw = await callGroq(
+    `Generate exactly ${config.numQ} interview questions for a ${config.level} ${config.role}.${stackNote} Type: ${typeLabel}.
+Return ONLY a JSON array, no markdown, no backticks, no explanation:
+[{"q":"question text","type":"Behavioral" or "Technical" or "HR","hint":"short hint on what a great answer covers"}]`
+  );
+  const clean = raw.replace(/```json|```/g,'').trim();
+  const start = clean.indexOf('[');
+  const end = clean.lastIndexOf(']');
+  return JSON.parse(clean.substring(start, end+1));
+}
+
+async function getFeedback(question, qType, answer) {
+  const raw = await callGroq(
+    `You are an expert ${config.role} interviewer at a top MNC. Evaluate this answer.
+Question: "${question}"
+Type: ${qType} | Level: ${config.level} | Time: ${elapsed}s
+Answer: "${answer}"
+
+Respond ONLY with a valid JSON object, no markdown, no explanation:
+{"score":<1-10>,"clarity":<1-10>,"relevance":<1-10>,"strengths":["point 1","point 2"],"improvements":["point 1","point 2"],"sampleAnswer":"3-4 sentence model answer","verdict":"one short encouraging sentence"}`
+  );
+  const clean = raw.replace(/```json|```/g,'').trim();
+  const start = clean.indexOf('{');
+  const end = clean.lastIndexOf('}');
+  return JSON.parse(clean.substring(start, end+1));
+}
+
+function startTimer(){
+  elapsed=0; clearInterval(timerInterval);
+  document.getElementById('timerBox').textContent='0:00';
+  timerInterval=setInterval(()=>{elapsed++;document.getElementById('timerBox').textContent=fmt(elapsed)},1000);
+}
+
+async function startInterview() {
+  API_KEY = document.getElementById('apiKey').value.trim();
+  if (!API_KEY) { showError('Please enter your Groq API key.'); return; }
+  if (!API_KEY.startsWith('gsk_')) { showError('Groq API key should start with gsk_'); return; }
+
+  config = {
+    role: document.getElementById('role').value,
+    type: document.getElementById('itype').value,
+    level: document.getElementById('level').value,
+    numQ: parseInt(document.getElementById('numQ').value),
+    stack: document.getElementById('stack').value.trim()
+  };
+
+  const btn = document.getElementById('startBtn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span> Generating questions...';
+  hideError();
+
+  try {
+    questions = await generateQuestions();
+    currentIdx=0; answers=[];
+    showQuestion();
+    document.getElementById('exitBtn').style.display='block';
+  } catch(e) {
+    showError('Failed to generate questions: ' + e.message);
+  } finally {
+    btn.disabled=false;
+    btn.innerHTML='▶ &nbsp;Start interview';
+  }
+}
+
+function showQuestion() {
+  if (currentIdx>=questions.length){showResults();return}
+  const q=questions[currentIdx], total=questions.length;
+  document.getElementById('progressFill').style.width=(currentIdx/total*100)+'%';
+  document.getElementById('progressLabel').textContent=(currentIdx+1)+' / '+total;
+  const badge=document.getElementById('typeBadge');
+  badge.textContent=q.type;
+  badge.className='type-badge badge-'+q.type.toLowerCase();
+  document.getElementById('qNum').textContent='Question '+(currentIdx+1);
+  document.getElementById('questionText').textContent=q.q;
+  hintVisible=false;
+  document.getElementById('hintToggle').textContent='▸ Show hint';
+  document.getElementById('hintBox').style.display='none';
+  document.getElementById('hintBox').textContent=q.hint||'';
+  document.getElementById('answerBox').value='';
+  document.getElementById('charCount').textContent='0 chars';
+  document.getElementById('answerBox').disabled=false;
+  document.getElementById('submitBtn').disabled=false;
+  document.getElementById('skipBtn').disabled=false;
+  document.getElementById('nextBtn').textContent=currentIdx+1>=total?'Finish ↗':'Next question →';
+  show('questionScreen');
+  startTimer();
+}
+
+function toggleHint(){
+  hintVisible=!hintVisible;
+  document.getElementById('hintBox').style.display=hintVisible?'block':'none';
+  document.getElementById('hintToggle').textContent=hintVisible?'▾ Hide hint':'▸ Show hint';
+}
+
+document.getElementById('answerBox').addEventListener('input',function(){
+  document.getElementById('charCount').textContent=this.value.length+' chars';
+});
+
+async function submitAnswer() {
+  const answer=document.getElementById('answerBox').value.trim();
+  if (!answer){showError('Please write an answer first.');return}
+  clearInterval(timerInterval); hideError();
+  document.getElementById('submitBtn').disabled=true;
+  document.getElementById('submitBtn').textContent='Analyzing...';
+  document.getElementById('skipBtn').disabled=true;
+  try {
+    const fb=await getFeedback(questions[currentIdx].q,questions[currentIdx].type,answer);
+    answers.push({question:questions[currentIdx].q,answer,feedback:fb});
+    showFeedback(fb,questions[currentIdx].q);
+  } catch(e) {
+    showError('Failed to get feedback: '+e.message);
+    document.getElementById('submitBtn').disabled=false;
+    document.getElementById('submitBtn').textContent='Get feedback ↗';
+    document.getElementById('skipBtn').disabled=false;
+  }
+}
+
+function skipQuestion(){
+  clearInterval(timerInterval);
+  answers.push({question:questions[currentIdx].q,answer:'',feedback:null});
+  currentIdx++; showQuestion();
+}
+
+function showFeedback(fb,question){
+  document.getElementById('fbQuestion').textContent=question;
+  ['Overall','Clarity','Relevance'].forEach((lbl,i)=>{
+    const key=['score','clarity','relevance'][i];
+    const el=document.getElementById('score'+lbl);
+    el.textContent=fb[key]; el.style.color=scoreColor(fb[key]);
+  });
+  document.getElementById('fbVerdict').textContent=fb.verdict;
+  document.getElementById('fbStrengths').innerHTML=fb.strengths.map(s=>`<li>${s}</li>`).join('');
+  document.getElementById('fbImprovements').innerHTML=fb.improvements.map(s=>`<li>${s}</li>`).join('');
+  document.getElementById('fbSample').textContent=fb.sampleAnswer;
+  show('feedbackScreen');
+}
+
+function retryQuestion(){answers.pop();showQuestion()}
+function nextQuestion(){currentIdx++;showQuestion()}
+
+function showResults(){
+  clearInterval(timerInterval);
+  const scored=answers.filter(a=>a.feedback);
+  const avg=scored.length?Math.round(scored.reduce((s,a)=>s+a.feedback.score,0)/scored.length):0;
+  const grade=avg>=9?{label:'Excellent',color:'var(--green)'}:avg>=7?{label:'Good',color:'var(--accent2)'}:avg>=5?{label:'Average',color:'var(--amber)'}:{label:'Needs work',color:'var(--red)'};
+  document.getElementById('avgScore').textContent=avg;
+  document.getElementById('avgScore').style.color=grade.color;
+  const badge=document.getElementById('gradeBadge');
+  badge.textContent=grade.label; badge.style.color=grade.color; badge.style.borderColor=grade.color;
+  document.getElementById('resultsSub').textContent=`You answered ${scored.length} of ${answers.length} questions`;
+  document.getElementById('breakdown').innerHTML=answers.map((a,i)=>`
+    <div class="breakdown-row">
+      <span class="row-q">Q${i+1}</span>
+      <span class="row-text">${a.question.substring(0,65)}...</span>
+      ${a.feedback?`<span class="row-score">${a.feedback.score}/10</span>`:`<span class="row-skipped">skipped</span>`}
+    </div>`).join('');
+  document.getElementById('progressFill').style.width='100%';
+  show('resultsScreen');
+}
+
+function goSetup(){
+  clearInterval(timerInterval);
+  questions=[];currentIdx=0;answers=[];
+  document.getElementById('exitBtn').style.display='none';
+  document.getElementById('progressFill').style.width='0%';
+  hideError(); show('setupScreen');
+}
+</script>
+</body>
 </html>
